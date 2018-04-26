@@ -17,6 +17,7 @@ var schema = buildSchema(`
 
   type Query {
     getMessage(id: ID!): Message
+    getAllMessages: [Message]
   }
 
   type Mutation {
@@ -36,8 +37,12 @@ class Message {
 
 // Maps username to content
 var fakeDatabase = {};
+var messages = [];
 
 var root = {
+  getAllMessages: function () {
+    return messages;
+  },
   getMessage: function ({id}) {
     if (!fakeDatabase[id]) {
       throw new Error('no message exists with id ' + id);
@@ -49,6 +54,9 @@ var root = {
     var id = require('crypto').randomBytes(10).toString('hex');
 
     fakeDatabase[id] = input;
+    input.id = id;
+    messages.push(input);
+
     return new Message(id, input);
   },
   updateMessage: function ({id, input}) {
@@ -68,5 +76,14 @@ app.use('/graphql', graphqlHTTP({
   graphiql: true,
 }));
 app.listen(4000, () => {
-  console.log('Running a GraphQL API server at localhost:4000/graphql');
+  console.log('Running a GraphQL API server at http://localhost:4000/graphql');
 });
+
+// mutation {
+//   createMessage(input: {
+//     author: "andy",
+//     content: "hope is a good thing",
+//   }) {
+//     id
+//   }
+// }
